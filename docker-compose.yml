@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  simpleproxy:
+    build: .
+    container_name: simpleproxy
+    ports:
+      - "${PROXY_PORT:-80}:80"
+    environment:
+      - TARGET_HOST=${TARGET_HOST}
+      - PUBLIC_HOST=${PUBLIC_HOST}
+      - PROXY_SCHEME=${PROXY_SCHEME:-https}
+      - CACHE_MAX_AGE=${CACHE_MAX_AGE:-3600}
+      - CACHE_STALE_REVALIDATE=${CACHE_STALE_REVALIDATE:-86400}
+      - CACHE_STALE_ERROR=${CACHE_STALE_ERROR:-86400}
+      - ENABLE_ETAG=${ENABLE_ETAG:-true}
+      - EXCLUDED_PATHS=${EXCLUDED_PATHS:-/wp-admin,/wp-login.php}
+      - INCLUDED_PATHS=${INCLUDED_PATHS:-.*}
+      - PROXY_TIMEOUT=${PROXY_TIMEOUT:-30}
+      - ENABLE_GZIP=${ENABLE_GZIP:-true}
+      - ENABLE_SSL_VERIFY=${ENABLE_SSL_VERIFY:-true}
+      - ALLOWED_METHODS=${ALLOWED_METHODS:-GET,HEAD}
+      - DEBUG_MODE=${DEBUG_MODE:-false}
+    volumes:
+      - proxy-logs:/var/log/apache2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  proxy-logs:
+    driver: local
